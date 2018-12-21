@@ -13,14 +13,14 @@ namespace Andoromeda.CleosNet.Agent.Controllers
     [Route("api/[controller]")]
     public class ProcessController : BaseController
     {
-        private static LaunchStatus _status = LaunchStatus.未启动;
+        private static LaunchStatus _status = LaunchStatus.NotLaunched;
 
         public enum LaunchStatus
         {
-            未启动,
-            正在启动,
-            正在运行,
-            启动失败
+            NotLaunched,
+            Launching,
+            Active,
+            LaunchFailed
         }
 
         [HttpPut]
@@ -72,12 +72,12 @@ namespace Andoromeda.CleosNet.Agent.Controllers
             });
         }
 
-        [HttpPut("init")]
-        [HttpPost("init")]
-        [HttpPatch("init")]
+        [HttpPut("onebox/init")]
+        [HttpPost("onebox/init")]
+        [HttpPatch("onebox/init")]
         public async Task<ApiResult> Init(bool? safeMode)
         {
-            if (_status != LaunchStatus.未启动 && _status != LaunchStatus.启动失败)
+            if (_status != LaunchStatus.NotLaunched && _status != LaunchStatus.LaunchFailed)
             {
                 return ApiResult(409, $"The EOS is under {_status} status.");
             }
@@ -86,14 +86,14 @@ namespace Andoromeda.CleosNet.Agent.Controllers
                 using (var serviceScope = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
                 {
                     var eos = serviceScope.ServiceProvider.GetService<OneBoxService>();
-                    _status = LaunchStatus.正在启动;
+                    _status = LaunchStatus.Launching;
                     if (eos.Launch(safeMode.HasValue ? safeMode.Value : false))
                     {
-                        _status = LaunchStatus.正在运行;
+                        _status = LaunchStatus.Active;
                     }
                     else
                     {
-                        _status = LaunchStatus.启动失败;
+                        _status = LaunchStatus.LaunchFailed;
                     }
                 }
             });
@@ -101,12 +101,12 @@ namespace Andoromeda.CleosNet.Agent.Controllers
             return ApiResult(201, "Lauching...");
         }
 
-        [HttpPut("stop")]
-        [HttpPost("stop")]
-        [HttpPatch("stop")]
+        [HttpPut("onebox/stop")]
+        [HttpPost("onebox/stop")]
+        [HttpPatch("onebox/stop")]
         public ApiResult Stop(bool? safeMode, [FromServices] OneBoxService eos)
         {
-            if (_status != LaunchStatus.正在运行 && _status != LaunchStatus.正在启动)
+            if (_status != LaunchStatus.Active && _status != LaunchStatus.Launching)
             {
                 return ApiResult(409, $"The EOS is under {_status} status.");
             }
@@ -119,15 +119,15 @@ namespace Andoromeda.CleosNet.Agent.Controllers
             {
                 eos.ForceShutdown();
             }
-            _status = LaunchStatus.未启动;
+            _status = LaunchStatus.NotLaunched;
             return ApiResult(200, "Succeeded");
         }
 
-        [HttpGet("status")]
+        [HttpGet("onebox/status")]
         public async Task<ApiResult<object>> Status([FromServices] OneBoxService eos)
         {
             string chainId = null;
-            if (_status == LaunchStatus.正在运行)
+            if (_status == LaunchStatus.Active)
             {
                 chainId = await eos.RetriveChainIdAsync();
             }

@@ -219,5 +219,42 @@ namespace Andoromeda.CleosNet.Client
                 };
             }
         }
+
+        public async Task<ClientResult> LaunchOneBoxAsync(CancellationToken cancellationToken = default)
+        {
+            using (var result = await _client.PostAsync("/api/process/onebox/init", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+            }), cancellationToken))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<ApiResult<object>>(text);
+
+                return new ClientResult
+                {
+                    IsSucceeded = response.code == 201,
+                };
+            }
+        }
+
+        public async Task<OneBoxStatusResult> WaitForOneBoxReadyAsync()
+        {
+            using (var result = await _client.GetAsync("/api/process/onebox/status"))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<ApiResult<OneBoxStatusResult>>(text);
+                if (response.data.Status == "NotLaunched")
+                {
+                    throw new InvalidOperationException("You should launch onebox first.");
+                }
+
+                if (response.data.Status == "Launching")
+                {
+                    await Task.Delay(1000);
+                    return await WaitForOneBoxReadyAsync();
+                }
+
+                return response.data;
+            }
+        }
     }
 }
