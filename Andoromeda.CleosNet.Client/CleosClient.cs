@@ -256,5 +256,34 @@ namespace Andoromeda.CleosNet.Client
                 return response.data;
             }
         }
+
+        public async Task<ClientResult> CompileSmartContractAsync(string path, CancellationToken cancellationToken = default)
+        {
+            using (var result = await _client.PostAsync("/api/file/file", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "base64", "mkdir build\r\ncd build\r\ncmake ..\r\nmake\r\n" },
+                { "path", System.IO.Path.Combine(path, "build.sh")}
+            })))
+            {
+            }
+
+            using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "file", "build.sh" },
+                { "workDir", System.IO.Path.Combine(path, "build.sh") }
+            }), cancellationToken))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var commandResult = JsonConvert.DeserializeObject<CommandResult>(text);
+
+                return new ClientResult<BlockchainInfo>
+                {
+                    Error = commandResult.Stderr,
+                    IsSucceeded = commandResult.ExitCode == 0,
+                    Output = commandResult.Stdout,
+                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                };
+            }
+        }
     }
 }
