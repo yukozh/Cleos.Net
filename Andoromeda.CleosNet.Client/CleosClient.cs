@@ -11,19 +11,42 @@ namespace Andoromeda.CleosNet.Client
 {
     public class CleosClient
     {
-        private readonly string _node;
+        private string _node;
         private readonly string _wallet;
         private HttpClient _client;
 
         public CleosClient() : this("http://eos.greymass.com", "http://localhost:8900")
         {
-            _client = new HttpClient { BaseAddress = new Uri(_node) };
         }
 
         public CleosClient(string node, string wallet)
         {
             _node = node;
             _wallet = wallet;
+            _client = new HttpClient { BaseAddress = new Uri("http://localhost:5500") };
+        }
+
+        public enum EosNet
+        {
+            Mainnet,
+            Onebox
+        }
+
+        public void ChangeNet(EosNet net)
+        {
+            if (net == EosNet.Mainnet)
+            {
+                _node = "http://eos.greymass.com";
+            }
+            else
+            {
+                _node = "http://localhost:8888";
+            }
+        }
+
+        public void ChangeNet(string node)
+        {
+            _node = node;
         }
 
         public async Task<ClientResult> CreateWalletAsync(string name, string privateKeyPath, CancellationToken cancellationToken = default)
@@ -32,6 +55,66 @@ namespace Andoromeda.CleosNet.Client
             {
                 { "file", "cleos" },
                 { "args", $"wallet create -n {name} -f {privateKeyPath}" }
+            }), cancellationToken))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var commandResult = JsonConvert.DeserializeObject<ApiResult<CommandResult>>(text).data;
+
+                return new ClientResult
+                {
+                    Error = commandResult.Stderr,
+                    IsSucceeded = commandResult.ExitCode == 0,
+                    Output = commandResult.Stdout
+                };
+            }
+        }
+
+        public async Task<ClientResult> OpenWalletAsync(string name, CancellationToken cancellationToken = default)
+        {
+            using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "file", "cleos" },
+                { "args", $"wallet open -n {name}" }
+            }), cancellationToken))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var commandResult = JsonConvert.DeserializeObject<ApiResult<CommandResult>>(text).data;
+
+                return new ClientResult
+                {
+                    Error = commandResult.Stderr,
+                    IsSucceeded = commandResult.ExitCode == 0,
+                    Output = commandResult.Stdout
+                };
+            }
+        }
+
+        public async Task<ClientResult> LockWalletAsync(string name, CancellationToken cancellationToken = default)
+        {
+            using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "file", "cleos" },
+                { "args", $"wallet lock -n {name}" }
+            }), cancellationToken))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var commandResult = JsonConvert.DeserializeObject<ApiResult<CommandResult>>(text).data;
+
+                return new ClientResult
+                {
+                    Error = commandResult.Stderr,
+                    IsSucceeded = commandResult.ExitCode == 0,
+                    Output = commandResult.Stdout
+                };
+            }
+        }
+
+        public async Task<ClientResult> LockAllWalletAsync(CancellationToken cancellationToken = default)
+        {
+            using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "file", "cleos" },
+                { "args", $"wallet lock_all" }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
@@ -271,6 +354,69 @@ namespace Andoromeda.CleosNet.Client
             {
                 { "file", "build.sh" },
                 { "workDir", System.IO.Path.Combine(path, "build.sh") }
+            }), cancellationToken))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var commandResult = JsonConvert.DeserializeObject<CommandResult>(text);
+
+                return new ClientResult<BlockchainInfo>
+                {
+                    Error = commandResult.Stderr,
+                    IsSucceeded = commandResult.ExitCode == 0,
+                    Output = commandResult.Stdout,
+                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                };
+            }
+        }
+
+        public async Task<ClientResult> GenerateKeyValuePair(string path, CancellationToken cancellationToken = default)
+        {
+            using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "file", "cleos" },
+                { "args", $"create key --file {path}" }
+            }), cancellationToken))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var commandResult = JsonConvert.DeserializeObject<CommandResult>(text);
+
+                return new ClientResult<BlockchainInfo>
+                {
+                    Error = commandResult.Stderr,
+                    IsSucceeded = commandResult.ExitCode == 0,
+                    Output = commandResult.Stdout,
+                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                };
+            }
+        }
+
+        public async Task<ClientResult> CreateAccountAsync(string creator, string account, string publicKey, CancellationToken cancellationToken = default)
+        {
+            using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "file", "cleos" },
+                { "args", $"create account {creator} {account} {publicKey} {publicKey} -p {creator}" }
+            }), cancellationToken))
+            {
+                var text = await result.Content.ReadAsStringAsync();
+                var commandResult = JsonConvert.DeserializeObject<CommandResult>(text);
+
+                return new ClientResult<BlockchainInfo>
+                {
+                    Error = commandResult.Stderr,
+                    IsSucceeded = commandResult.ExitCode == 0,
+                    Output = commandResult.Stdout,
+                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                };
+            }
+        }
+
+        public async Task<ClientResult> CreateAccountAsync(string creator, string account, string publicKey, float net, float cpu, float ram, CancellationToken cancellationToken = default)
+        {
+            using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "file", "cleos" },
+                { "args", $"create account {creator} {account} {publicKey} {publicKey} --staked-net \"{net.ToString("0.0000")} EOS\" --stake-cpu \"{cpu.ToString("0.0000")} EOS\" --buy-ram \"{ram.ToString("0.0000")} EOS\" -p {creator}" }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
