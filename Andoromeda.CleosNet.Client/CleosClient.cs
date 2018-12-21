@@ -149,7 +149,7 @@ namespace Andoromeda.CleosNet.Client
             using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "file", "cleos" },
-                { "args", $"-u {_node} --wallet-url http://localhost:8888 wallet import --private-key " + privateKey }
+                { "args", $"-u {_node} --wallet-url {_wallet} wallet import --private-key " + privateKey }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
