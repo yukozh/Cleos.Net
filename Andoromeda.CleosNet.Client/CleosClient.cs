@@ -85,8 +85,8 @@ namespace Andoromeda.CleosNet.Client
         {
             using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "file", "cleos" },
-                { "args", $"-u {_node} --wallet-url {_wallet} push action {code} {method} '{JsonConvert.SerializeObject(args)}' -p{account}@{permission}" }
+                { "file", "bash" },
+                { "stdin", $"cleos -u {_node} --wallet-url {_wallet} push action {code} {method} '{JsonConvert.SerializeObject(args)}' -p{account}@{permission}" }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
