@@ -5,7 +5,7 @@ WORKDIR /workdir
 # copy files
 RUN mkdir /home/agent
 
-# COPY ./Dasdaq.Dev.Agent /home/dasdaq_eos/agent
+COPY ./Andoromeda.CleosNet /home/cleos-net/agent
 
 # Install .NET Core & Node.js
 RUN wget -O libicu55.deb http://archive.ubuntu.com/ubuntu/pool/main/i/icu/libicu55_55.1-7ubuntu0.4_amd64.deb
@@ -18,4 +18,4 @@ RUN apt-get install dotnet-sdk-2.1 -y
 RUN sudo apt-get install nodejs -y
 RUN npm install yarn -g
 
-WORKDIR /home/dasdaq_eos/agent
+WORKDIR /home/cleos-net/agent
