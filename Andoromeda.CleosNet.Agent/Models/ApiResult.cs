@@ -1,4 +1,4 @@
-﻿namespace Andoromeda.CleosNet.Models
+﻿namespace Andoromeda.CleosNet.Agent.Models
 {
     public class ApiResult<T>
     {

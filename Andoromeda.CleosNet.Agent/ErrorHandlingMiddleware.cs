@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using Andoromeda.CleosNet.Models;
+using Andoromeda.CleosNet.Agent.Models;
 
-namespace Andoromeda.CleosNet
+namespace Andoromeda.CleosNet.Agent
 {
     public class ErrorHandlingMiddleware
     {

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
-using Andoromeda.CleosNet.Models;
+using Andoromeda.CleosNet.Agent.Models;
 
-namespace Andoromeda.CleosNet.Controllers
+namespace Andoromeda.CleosNet.Agent.Controllers
 {
     [Route("api/[controller]")]
     public class FileController : BaseController

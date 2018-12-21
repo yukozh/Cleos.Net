@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Andoromeda.CleosNet
+namespace Andoromeda.CleosNet.Agent
 {
     public class Program
     {

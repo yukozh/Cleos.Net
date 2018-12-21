@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Andoromeda.CleosNet.Models;
+using Andoromeda.CleosNet.Agent.Models;
 
-namespace Andoromeda.CleosNet.Controllers
+namespace Andoromeda.CleosNet.Agent.Controllers
 {
     public class BaseController : Controller
     {
