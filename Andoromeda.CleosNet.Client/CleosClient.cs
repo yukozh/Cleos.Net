@@ -534,6 +534,7 @@ namespace Andoromeda.CleosNet.Client
             await CreateWalletAsync("eosio.token", "/home/cleos-net/wallet/eosio.token.txt", cancellationToken);
             await GenerateKeyValuePair("/home/cleos-net/wallet/eosio.token.key.txt", cancellationToken);
             var keys = await RetriveKeyPairsAsync("/home/cleos-net/wallet/eosio.token.key.txt", cancellationToken);
+            await ImportPrivateKeyToWalletAsync(keys.PrivateKey);
             await CreateAccountAsync("eosio", "eosio.token", keys.PublicKey, keys.PublicKey, cancellationToken);
             await DownloadAndCompileEosioTokenAsync(cancellationToken);
             await SetContractAsync("/home/cleos-net/contracts/eosio.token/build", "eosio.token", "eosio.token", "active", cancellationToken);
