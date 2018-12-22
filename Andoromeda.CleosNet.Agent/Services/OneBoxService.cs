@@ -144,7 +144,7 @@ namespace Andoromeda.CleosNet.Agent.Services
         {
             var config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
             var pluginsCommand = string.Join(' ', config.plugins.Select(x => $"--plugin {x}"));
-            var startInfo = new ProcessStartInfo("/opt/eosio/bin/nodeos", $"-e -p eosio {pluginsCommand} -d /mnt/dev/data --config-dir /mnt/dev/config --http-server-address=0.0.0.0:8888 --access-control-allow-origin=* --contracts-console --http-validate-host=false --delete-all-blocks");
+            var startInfo = new ProcessStartInfo("/opt/eosio/bin/nodeos", $"-e -p eosio --plugin eosio::chain_api_plugin --plugin eosio::history_api_plugin");
             _oneboxProc = _proc.StartProcess(startInfo, async (id, x) => {
                 try
                 {
