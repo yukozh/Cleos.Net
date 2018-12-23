@@ -127,7 +127,7 @@ namespace Andoromeda.CleosNet.Agent.Services
 
         public CommandResult ExecuteCleosCommand(string command)
         {
-            return ExecuteCommand($"cleos -u http://0.0.0.0:8888 --wallet-url http://0.0.0.0:8888 {command}");
+            return ExecuteCommand($"cleos -u http://0.0.0.0:8888 --wallet-url http://0.0.0.0:8900 {command}");
         }
 
         public CommandResult ExecuteEosioCppCommand(string command, string workDir)
@@ -222,26 +222,8 @@ namespace Andoromeda.CleosNet.Agent.Services
         public string GenerateWallet()
         {
             // Start cleos to create a wallet
-            var result = ExecuteCleosCommand("wallet create");
-            var output = result.StandardOutput;
-
-            // Find out the private key string
-            var regex = new Regex("(?<=\").*?(?=\")");
-            var matchResult = regex.Match(output);
-            if (!matchResult.Success)
-            {
-                var error = "Wallet create failed. \r\n Output: \r\n" + output;
-                Console.Error.WriteLine(error);
-                throw new Exception(error);
-            }
-
-            StoreWalletPrivateKey(matchResult.Value);
-            return matchResult.Value;
-        }
-
-        public void StoreWalletPrivateKey(string privateKey)
-        {
-            File.WriteAllText(_privateKeyFilePath, privateKey);
+            var result = ExecuteCleosCommand($"wallet create -f {_privateKeyFilePath}");
+            return File.ReadAllText(_privateKeyFilePath);
         }
 
         public string GetPrivateKey()
