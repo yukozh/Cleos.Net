@@ -12,6 +12,7 @@ namespace Andoromeda.CleosNet.Sample
             await client.QuickLaunchOneBoxAsync();
             var keys = await client.RetriveKeyPairsAsync("/home/cleos-net/wallet/eosio.token.key.txt");
             await client.CreateAccountAsync("eosio", "yuko", keys.PublicKey, keys.PublicKey);
+            await client.PushActionAsync("eosio.token", "transfer", "eosio.token", "active", new object[] { "eosio.token", "yuko", "1000.0000 EOS", "" });
         }
     }
 }
