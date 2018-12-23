@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Net.Http;
 using System.Linq;
+using System.IO;
 using Newtonsoft.Json;
 
 namespace Andoromeda.CleosNet.Client
@@ -12,17 +13,15 @@ namespace Andoromeda.CleosNet.Client
     public class CleosClient
     {
         private string _node;
-        private readonly string _wallet;
         private HttpClient _client;
 
-        public CleosClient() : this("http://eos.greymass.com", "http://localhost:8900")
+        public CleosClient() : this("http://eos.greymass.com")
         {
         }
 
-        public CleosClient(string node, string wallet)
+        public CleosClient(string node)
         {
             _node = node;
-            _wallet = wallet;
             _client = new HttpClient { BaseAddress = new Uri("http://localhost:5500") };
         }
 
@@ -144,12 +143,12 @@ namespace Andoromeda.CleosNet.Client
             }
         }
 
-        public async Task<ClientResult> ImportPrivateKeyToWalletAsync(string privateKey, CancellationToken cancellationToken = default)
+        public async Task<ClientResult> ImportPrivateKeyToWalletAsync(string privateKey, string walletName, CancellationToken cancellationToken = default)
         {
             using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "file", "cleos" },
-                { "args", $"-u {_node} --wallet-url {_wallet} wallet import --private-key " + privateKey }
+                { "args", $"-u {_node} wallet import -n {walletName} --private-key " + privateKey }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
@@ -169,7 +168,7 @@ namespace Andoromeda.CleosNet.Client
             using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "file", "bash" },
-                { "stdin", $"cleos -u {_node} --wallet-url {_wallet} push action {code} {method} '{JsonConvert.SerializeObject(args)}' -p{account}@{permission}" }
+                { "stdin", $"cleos -u {_node} push action {code} {method} '{JsonConvert.SerializeObject(args)}' -p{account}@{permission}" }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
@@ -189,7 +188,7 @@ namespace Andoromeda.CleosNet.Client
             using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "file", "cleos" },
-                { "args", $"--wallet-url {_wallet} wallet unlock --password " + password }
+                { "args", $"wallet unlock --password " + password }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
@@ -209,7 +208,7 @@ namespace Andoromeda.CleosNet.Client
             using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "file", "cleos" },
-                { "args", $"-u {_node} --wallet-url {_wallet} set contract {contractName} {contractPath} -p{account}@{permission}" }
+                { "args", $"-u {_node} set contract {contractName} {contractPath} -p{account}@{permission}" }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
@@ -348,18 +347,11 @@ namespace Andoromeda.CleosNet.Client
 
         public async Task<ClientResult> CompileSmartContractAsync(string path, CancellationToken cancellationToken = default)
         {
-            using (var result = await _client.PostAsync("/api/file/file", new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { "base64", "mkdir build\r\ncd build\r\ncmake ..\r\nmake\r\n" },
-                { "path", System.IO.Path.Combine(path, "build.sh")}
-            })))
-            {
-            }
-
             using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "file", "build.sh" },
-                { "workDir", System.IO.Path.Combine(path, "build.sh") }
+                { "file", "bash" },
+                { "stdin", "mkdir build\ncd build\ncmake ..\nmake\n" },
+                { "workDir", path }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
@@ -411,8 +403,7 @@ namespace Andoromeda.CleosNet.Client
                 {
                     Error = commandResult.Stderr,
                     IsSucceeded = commandResult.ExitCode == 0,
-                    Output = commandResult.Stdout,
-                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                    Output = commandResult.Stdout
                 };
             }
         }
@@ -468,48 +459,26 @@ namespace Andoromeda.CleosNet.Client
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
-                var commandResult = JsonConvert.DeserializeObject<ApiResult<CommandResult>>(text).data;
+                var response = JsonConvert.DeserializeObject<ApiResult<object>>(text);
 
                 return new ClientResult<BlockchainInfo>
                 {
-                    Error = commandResult.Stderr,
-                    IsSucceeded = commandResult.ExitCode == 0,
-                    Output = commandResult.Stdout,
-                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                    Error = response.code >= 200 && response.code < 300 ? null : response.msg,
+                    IsSucceeded = response.code >= 200 && response.code < 300,
+                    Output = response.msg
                 };
             }
         }
 
         public async Task<byte[]> GetFileAsync(string path, CancellationToken cancellationToken = default)
         {
-            using (var result = await _client.PostAsync("/api/file/file", new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { "path", path }
-            }), cancellationToken))
+            using (var result = await _client.GetAsync($"/api/file/file?path={path}", cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<ApiResult<GetFileResult>>(text).data;
 
                 return Convert.FromBase64String(response.Base64);
             }
-        }
-
-        public async Task DownloadAndCompileEosioTokenAsync(CancellationToken cancellationToken = default)
-        {
-            await CreateFolderAsync("/home/cleos-net/contracts/eosio.token", cancellationToken);
-            await CreateFileAsync("/home/cleos-net/contracts/eosio.token/CMakeLists.txt", 
-                await HttpGetAsync("https://raw.githubusercontent.com/EOSIO/eos/master/contracts/eosio.token/CMakeLists.txt"), 
-                cancellationToken);
-            await CreateFileAsync("/home/cleos-net/contracts/eosio.token/eosio.token.cpp",
-                await HttpGetAsync("https://raw.githubusercontent.com/EOSIO/eos/master/contracts/eosio.token/eosio.token.cpp"),
-                cancellationToken);
-            await CreateFileAsync("/home/cleos-net/contracts/eosio.token/eosio.token.hpp",
-                await HttpGetAsync("https://raw.githubusercontent.com/EOSIO/eos/master/contracts/eosio.token/eosio.token.hpp"),
-                cancellationToken);
-            await CreateFileAsync("/home/cleos-net/contracts/eosio.token/eosio.token.abi",
-                await HttpGetAsync("https://raw.githubusercontent.com/EOSIO/eos/master/contracts/eosio.token/eosio.token.abi"),
-                cancellationToken);
-            await CompileSmartContractAsync("/home/cleos-net/contracts/eosio.token");
         }
 
         public async Task<(string PrivateKey, string PublicKey)> RetriveKeyPairsAsync(string path, CancellationToken cancellationToken = default)
@@ -533,22 +502,54 @@ namespace Andoromeda.CleosNet.Client
             await WaitForOneBoxReadyAsync(cancellationToken);
             await CreateWalletAsync("eosio.token", "/home/cleos-net/wallet/eosio.token.txt", cancellationToken);
             await GenerateKeyValuePair("/home/cleos-net/wallet/eosio.token.key.txt", cancellationToken);
+            var signatureProvider = await RetriveSignatureProviderKeyAsync(cancellationToken);
+            await ImportPrivateKeyToWalletAsync(signatureProvider.privateKey, "eosio.token", cancellationToken);
             var keys = await RetriveKeyPairsAsync("/home/cleos-net/wallet/eosio.token.key.txt", cancellationToken);
-            await ImportPrivateKeyToWalletAsync(keys.PrivateKey);
+            await ImportPrivateKeyToWalletAsync(keys.PrivateKey, "eosio.token");
             await CreateAccountAsync("eosio", "eosio.token", keys.PublicKey, keys.PublicKey, cancellationToken);
-            await DownloadAndCompileEosioTokenAsync(cancellationToken);
-            await SetContractAsync("/home/cleos-net/contracts/eosio.token/build", "eosio.token", "eosio.token", "active", cancellationToken);
+            await SetContractAsync("/opt/eosio/contracts/eosio.token", "eosio.token", "eosio.token", "active", cancellationToken);
             await PushActionAsync("eosio.token", "create", "eosio.token", "active", new[] { "eosio.token", "1000000000.0000 EOS" });
+            await PushActionAsync("eosio.token", "issue", "eosio.token", "active", new[] { "eosio.token", "1000000000.0000 EOS", "OneBox Init" });
         }
 
-        private async Task<byte[]> HttpGetAsync(string url, CancellationToken cancellationToken = default)
+        public async Task<(string publicKey, string privateKey)> RetriveSignatureProviderKeyAsync(CancellationToken cancellationToken)
         {
-            var hostIndex = url.IndexOf('/', "https://".Length);
-            var host = url.Substring(0, hostIndex);
-            using (var client = new HttpClient() { BaseAddress = new Uri(host) })
-            using (var result = await client.GetAsync(url.Substring(host.Length)))
+            var file = await GetFileAsync("/config.ini", cancellationToken);
+            var lines = Encoding.Default.GetString(file).Split('\n').Select(x => x.TrimEnd('\r'));
+            var signatureLine = lines.SingleOrDefault(x => x.StartsWith("signature-provider"));
+            if (signatureLine == null)
             {
-                return await result.Content.ReadAsByteArrayAsync();
+                throw new Exception("Line signature-provider was not found");
+            }
+
+            var splitedStrings = signatureLine.Split('=');
+            var publicKey = splitedStrings[1].Trim();
+            var privateKey = splitedStrings[2].Trim().Substring(4);
+
+            return (publicKey, privateKey);
+        }
+        
+        private async Task<byte[]> HttpGetAsync(string url, CancellationToken cancellationToken = default, int retryLeft = 3)
+        {
+            try
+            {
+                var hostIndex = url.IndexOf('/', "https://".Length);
+                var host = url.Substring(0, hostIndex);
+                using (var client = new HttpClient() { BaseAddress = new Uri(host) })
+                using (var result = await client.GetAsync(url.Substring(host.Length)))
+                {
+                    return await result.Content.ReadAsByteArrayAsync();
+                }
+            }
+            catch
+            {
+                if (retryLeft == 0)
+                {
+                    throw;
+                }
+
+                await Task.Delay(1000);
+                return await HttpGetAsync(url, cancellationToken, --retryLeft);
             }
         }
     }

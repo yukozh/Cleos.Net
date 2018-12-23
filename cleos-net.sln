@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andoromeda.CleosNet.Agent", "Andoromeda.CleosNet.Agent\Andoromeda.CleosNet.Agent.csproj", "{256E8E4B-83C6-430C-A184-F3CBBE193819}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andoromeda.CleosNet.Client", "Andoromeda.CleosNet.Client\Andoromeda.CleosNet.Client.csproj", "{1F8A4BB8-B73D-474C-B064-FDA58F087FFF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andoromeda.CleosNet.Client", "Andoromeda.CleosNet.Client\Andoromeda.CleosNet.Client.csproj", "{1F8A4BB8-B73D-474C-B064-FDA58F087FFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andoromeda.CleosNet.Sample", "Andoromeda.CleosNet.Sample\Andoromeda.CleosNet.Sample.csproj", "{41484535-7CB7-4717-A05D-D5F734D72A8C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{1F8A4BB8-B73D-474C-B064-FDA58F087FFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F8A4BB8-B73D-474C-B064-FDA58F087FFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F8A4BB8-B73D-474C-B064-FDA58F087FFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41484535-7CB7-4717-A05D-D5F734D72A8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41484535-7CB7-4717-A05D-D5F734D72A8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41484535-7CB7-4717-A05D-D5F734D72A8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41484535-7CB7-4717-A05D-D5F734D72A8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
