@@ -347,7 +347,7 @@ namespace Andoromeda.CleosNet.Client
 
         public async Task<ClientResult> CompileSmartContractAsync(string path, CancellationToken cancellationToken = default)
         {
-            var contract = Path.GetFileNameWithoutExtension(Directory.EnumerateFiles(path, "*.cpp").First());
+            var contract = Path.GetFileNameWithoutExtension(path + ".cpp");
             using (var result = await _client.PostAsync("/api/process", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "file", "bash" },
