@@ -361,8 +361,7 @@ namespace Andoromeda.CleosNet.Client
                 {
                     Error = commandResult.Stderr,
                     IsSucceeded = commandResult.ExitCode == 0,
-                    Output = commandResult.Stdout,
-                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                    Output = commandResult.Stdout
                 };
             }
         }
@@ -382,8 +381,7 @@ namespace Andoromeda.CleosNet.Client
                 {
                     Error = commandResult.Stderr,
                     IsSucceeded = commandResult.ExitCode == 0,
-                    Output = commandResult.Stdout,
-                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                    Output = commandResult.Stdout
                 };
             }
         }
@@ -423,8 +421,7 @@ namespace Andoromeda.CleosNet.Client
                 {
                     Error = commandResult.Stderr,
                     IsSucceeded = commandResult.ExitCode == 0,
-                    Output = commandResult.Stdout,
-                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                    Output = commandResult.Stdout
                 };
             }
         }
@@ -444,8 +441,7 @@ namespace Andoromeda.CleosNet.Client
                 {
                     Error = commandResult.Stderr,
                     IsSucceeded = commandResult.ExitCode == 0,
-                    Output = commandResult.Stdout,
-                    Result = JsonConvert.DeserializeObject<BlockchainInfo>(commandResult.Stdout)
+                    Output = commandResult.Stdout
                 };
             }
         }
