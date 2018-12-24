@@ -450,12 +450,13 @@ namespace Andoromeda.CleosNet.Client
             }
         }
 
-        public async Task<ClientResult> CreateFileAsync(string path, byte[] bytes, CancellationToken cancellationToken = default)
+        public async Task<ClientResult> UploadFileAsync(string path, byte[] bytes, bool force = false, CancellationToken cancellationToken = default)
         {
             using (var result = await _client.PostAsync("/api/file/file", new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "base64", Convert.ToBase64String(bytes) },
-                { "path", path }
+                { "path", path },
+                { "force", force.ToString() }
             }), cancellationToken))
             {
                 var text = await result.Content.ReadAsStringAsync();

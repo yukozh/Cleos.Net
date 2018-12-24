@@ -84,9 +84,9 @@ namespace Andoromeda.CleosNet.Agent.Controllers
         [HttpPut("file")]
         [HttpPost("file")]
         [HttpPatch("file")]
-        public object CreateFile(string path, string base64)
+        public object CreateFile(string path, string base64, bool force)
         {
-            if (System.IO.File.Exists(path))
+            if (System.IO.File.Exists(path) && !force)
             {
                 return ApiResult(400, "File already exists");
             }
