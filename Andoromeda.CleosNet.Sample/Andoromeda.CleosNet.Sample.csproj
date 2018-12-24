@@ -10,4 +10,13 @@
     <ProjectReference Include="..\Andoromeda.CleosNet.Client\Andoromeda.CleosNet.Client.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="CMakeLists.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="counter.cpp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
